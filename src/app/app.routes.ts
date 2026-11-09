@@ -7,8 +7,14 @@ export const routes: Routes = [
     path: 'paginas',
     component: Template,
     children: [
-        {path: 'cadastro-cartoes',
-        component: CadastroCartao}
+      {
+        path: 'cadastro-cartoes',
+        component: CadastroCartao,
+      },
+      {
+        path: 'cadasto-cartoes',
+        redirectTo: 'cadastro-cartoes',
+      },
     ]
-}   
-    ];
+  },
+];
