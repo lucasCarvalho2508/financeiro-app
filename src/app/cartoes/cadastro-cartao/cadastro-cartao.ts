@@ -2,7 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CartaoService } from '../cartao-service';
 import { DadosCartaoForm, DetalhesCartao } from '../dados-cartao';
-
+import { ValidationErrorResponse } from '../common/validation/validation-error-model';
+import { CommonModule } from '@angular/common';
 
 interface CartaoForm {
   nome: FormControl<string>;
@@ -28,8 +29,20 @@ export class CadastroCartao implements OnInit {
     });
   }
 
+  isFormInvalid(): boolean {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return true;
+    }
+    return false;
+  }
+
  handleSubmit(){
-    console.log(this.form.value);
+
+    if(this.isFormInvalid()) {
+      return;
+    }
+
     const dadosCartao = this.form.value as DadosCartaoForm;
     this.service
       .criar(dadosCartao)
@@ -37,13 +50,26 @@ export class CadastroCartao implements OnInit {
         next: (response: DetalhesCartao) => {
           console.log('recebendo a resposta do servidor:', response);
         },
-        error: (error) => {
-          console.error('Falha ao cadastrar cartão:', {
-            status: error.status,
-            mensagem: error.message,
-            resposta: error.error,
-          });
-        }
+        error: (error) => this.onError(error)
       });
   }
+
+  private aplicarErroValidacao(error: ValidationErrorResponse){
+    error.Erros.forEach((erro) => {
+      const controle = this.form.get(erro.field);
+      if (controle) {
+        controle.setErrors({ mensagem: erro.mensage });
+        controle.markAsTouched();
+      }
+    });
+  }
+
+  private onError(response: any): void{
+    if(response.status === 422) {
+      this.aplicarErroValidacao(response.error);
+      return;
+    } else {
+      console.error('Erro inesperado:', response);
+    }
+}
 }
